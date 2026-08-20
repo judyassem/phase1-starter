@@ -1,0 +1,16 @@
+FROM docker.io/library/node:22-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci --omit=dev
+
+COPY . .
+
+EXPOSE 8082
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8082/health || exit 1
+
+CMD ["npm", "start"]
