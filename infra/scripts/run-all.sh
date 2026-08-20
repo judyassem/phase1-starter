@@ -22,9 +22,7 @@
 
 set -euo pipefail
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 NETWORK="eventhub-net"
 
@@ -35,9 +33,7 @@ MONGO_NAME="eventhub-mongo";      MONGO_IMAGE="docker.io/library/mongo:7";      
 REDIS_NAME="eventhub-redis";      REDIS_IMAGE="docker.io/library/redis:7";                REDIS_PORT=6379
 RABBIT_NAME="eventhub-rabbitmq";  RABBIT_IMAGE="docker.io/library/rabbitmq:3-management"; RABBIT_PORT=5672
 
-# Secrets/config - externalized here, not baked into any image.
-# For real use, move these into infra/env/*.env and load with --env-file
-# instead of inlining them in the script.
+
 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-catalog_root_pw}"
 MYSQL_DATABASE="${MYSQL_DATABASE:-catalog}"
 MYSQL_USER="${MYSQL_USER:-catalog_user}"
@@ -59,9 +55,7 @@ ANALYTICS_NAME="eventhub-analytics"; ANALYTICS_PORT=8085
 GATEWAY_NAME="eventhub-gateway";     GATEWAY_PORT="${GATEWAY_PORT:-8080}"
 FRONTEND_NAME="eventhub-frontend";   FRONTEND_PORT=3000
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 log() { echo "[run-all] $*"; }
 
 container_exists() { podman ps -a --format '{{.Names}}' | grep -qx "$1"; }
@@ -103,9 +97,8 @@ wait_for_tcp() {
   log "${host}:${port} is reachable"
 }
 
-# ---------------------------------------------------------------------------
 # 1. Network
-# ---------------------------------------------------------------------------
+
 if podman network exists "$NETWORK" 2>/dev/null; then
   log "network ${NETWORK} already exists"
 else
@@ -113,9 +106,7 @@ else
   podman network create "$NETWORK"
 fi
 
-# ---------------------------------------------------------------------------
 # 2. Datastores
-# ---------------------------------------------------------------------------
 if container_exists "$MYSQL_NAME"; then
   log "${MYSQL_NAME} already exists, starting it"
   podman start "$MYSQL_NAME" >/dev/null
