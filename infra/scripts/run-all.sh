@@ -242,6 +242,7 @@ else
     -e MONGO_URI="mongodb://${MONGO_NAME}:${MONGO_PORT}/${MONGO_DB}" \
     -e RABBITMQ_HOST="$RABBIT_NAME" -e RABBITMQ_PORT="$RABBIT_PORT" \
     -e AUTH_SERVICE_URL="http://${AUTH_NAME}:${AUTH_PORT}" \
+    -e AI_INSIGHT_URL="http://${AI_INSIGHT_NAME}:${AI_INSIGHT_PORT}" \
     eventhub/booking:latest
 fi
 wait_for_healthy "$BOOKING_NAME"
