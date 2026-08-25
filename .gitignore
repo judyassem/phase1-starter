@@ -1,0 +1,56 @@
+# --- Secrets / env ---
+.env
+.env.*
+!.env.example
+
+# --- Node (frontend, api-gateway, auth-service) ---
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+
+# --- Python (booking, analytics, ai-insight) ---
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Java (legacy-catalog-java) ---
+target/
+*.class
+*.jar
+!gradle-wrapper.jar
+.gradle/
+build/
+
+# --- Go (notification-worker-go) ---
+notification-worker-go/notification
+*.exe
+*.test
+
+# --- Docker ---
+*.pid
+
+# --- Logs ---
+*.log
+logs/
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- OS ---
+Thumbs.db

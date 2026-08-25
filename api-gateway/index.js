@@ -1,5 +1,4 @@
-{
-    const express = require('express');
+const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
@@ -7,48 +6,84 @@ const app = express();
 
 app.use(cors());
 
-// Auth service
+// app.use(
+//   '/api/auth',
+//   createProxyMiddleware({
+//     target: process.env.AUTH_SERVICE_URL || 'http://auth:8082',
+//     changeOrigin: true,
+//     pathRewrite: () => `/api/auth`,
+//   })
+// );
+
+// app.use(
+//   '/api/catalog',
+//   createProxyMiddleware({
+//     target: process.env.CATALOG_SERVICE_URL || 'http://catalog:8081',
+//     changeOrigin: true,
+//     pathRewrite: () => `/api/catalog`,
+//   })
+// );
+
+// app.use(
+//   '/api/bookings',
+//   createProxyMiddleware({
+//     target: process.env.BOOKING_SERVICE_URL || 'http://booking:8083',
+//     changeOrigin: true,
+//     pathRewrite: () => `/api/bookings/`,
+//   })
+// );
+
 app.use(
   '/api/auth',
   createProxyMiddleware({
-    target: 'http://localhost:8082',
+    target: process.env.AUTH_SERVICE_URL || 'http://auth:8082',
     changeOrigin: true,
+    pathRewrite: (path) => `/api/auth${path === '/' ? '' : path}`,
   })
 );
 
-// Catalog service
 app.use(
   '/api/catalog',
   createProxyMiddleware({
-    target: 'http://localhost:8081',
+    target: process.env.CATALOG_SERVICE_URL || 'http://catalog:8081',
     changeOrigin: true,
+    pathRewrite: (path) => `/api/catalog${path === '/' ? '' : path}`,
   })
 );
 
-// Booking service
 app.use(
   '/api/bookings',
   createProxyMiddleware({
-    target: 'http://localhost:8083',
+    target: process.env.BOOKING_SERVICE_URL || 'http://booking:8083',
     changeOrigin: true,
+    pathRewrite: (path) => `/api/bookings${path === '/' ? '' : path}`,
   })
 );
 
-// Analytics service
+app.use(
+  '/api/reviews',
+  createProxyMiddleware({
+    target: process.env.BOOKING_SERVICE_URL || 'http://booking:8083',
+    changeOrigin: true,
+    pathRewrite: (path) => `/api/reviews${path === '/' ? '' : path}`,
+  })
+);
+
 app.use(
   '/api/analytics/summary',
   createProxyMiddleware({
-    target: 'http://localhost:8085',
+    target: process.env.ANALYTICS_SERVICE_URL || 'http://analytics:8085',
     changeOrigin: true,
+    pathRewrite: () => '/api/analytics/summary',
   })
 );
 
-//ai service
 app.use(
   '/api/analyze',
   createProxyMiddleware({
-    target: 'http://localhost:8084',
+    target: process.env.AI_INSIGHT_SERVICE_URL || 'http://ai-insight:8084',
     changeOrigin: true,
+    pathRewrite: () => `/api/analyze`,
   })
 );
 
@@ -57,6 +92,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(8080, () => {
-  console.log('API Gateway running on http://localhost:8080');
+  console.log('API Gateway running on port 8080');
 });
-}

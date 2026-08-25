@@ -1,0 +1,25 @@
+## NOT DONE 
+#?????
+
+FROM docker.io/library/golang:1.22-alpine AS builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o notification-worker .
+
+FROM docker.io/library/alpine:3.20
+
+WORKDIR /app
+
+COPY --from=builder /app/notification-worker .
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
+  CMD ["/app/notification-worker", "--healthcheck"]
+
+CMD ["./notification-worker"]

@@ -1,0 +1,50 @@
+# ---- Build stage ----
+FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
+
+WORKDIR /app
+
+# Copy the POM first so the dependency layer is cached across rebuilds
+# and only re-fetched when pom.xml actually changes.
+COPY pom.xml .
+RUN mvn -B -q dependency:go-offline
+
+COPY src ./src
+RUN mvn -B -q clean package -DskipTests
+
+# ---- Runtime stage ----
+FROM docker.io/library/eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+# The base runtime image does not ship wget/curl - install it explicitly,
+# otherwise the HEALTHCHECK below fails with "command not found"
+# regardless of whether the app is actually up.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends wget \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/*.jar app.jar
+
+# Externalized config: Spring Boot auto-binds env vars over whatever is
+# baked into application.properties (SPRING_DATASOURCE_URL/USERNAME/
+# PASSWORD, SERVER_PORT, etc). run-all.sh passes these in - nothing here
+# is hardcoded, and the legacy properties file doesn't need to be edited.
+ENV SERVER_PORT=8081
+
+# Matches the port this service is listed under in the project's port
+# table (8081) - the default Spring Boot port is 8080, so without
+# SERVER_PORT set this container would come up on the wrong port.
+EXPOSE 8081
+
+# This is the intentionally "legacy" service - per its README it has no
+# /health endpoint, on purpose. Rather than fake one against a path that
+# doesn't exist (which would report "unhealthy" forever), this just
+# confirms the HTTP port is actually answering: wget exit code 0 (success)
+# or 8 (server responded with an HTTP error page, e.g. 404) both mean
+# "the JVM is up and Tomcat is serving requests." Only a connection
+# failure/timeout counts as unhealthy.
+HEALTHCHECK --interval=10s --timeout=5s --start-period=25s --retries=5 \
+  CMD wget -q -O /dev/null --timeout=3 http://127.0.0.1:8081/ ; \
+      code=$? ; [ "$code" -eq 0 ] || [ "$code" -eq 8 ]
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
