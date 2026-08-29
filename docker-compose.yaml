@@ -10,7 +10,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./db-seed/mysql-seed.sql:/docker-entrypoint-initdb.d/01-seed.sql
     networks:
-      - eventhub-network
+      - database-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -27,7 +27,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./db-seed/postgres-seed.sql:/docker-entrypoint-initdb.d/01-seed.sql
     networks:
-      - eventhub-network
+      - database-network
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DATABASE}"]
       interval: 10s
@@ -42,7 +42,7 @@ services:
       - mongo_data:/data/db
       - ./db-seed/mongo-seed.js:/docker-entrypoint-initdb.d/01-seed.js
     networks:
-      - eventhub-network
+      - database-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -54,7 +54,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - eventhub-network
+      - database-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -68,7 +68,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - eventhub-network
+      - database-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -86,7 +86,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER} 
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD} 
     networks:
-      - eventhub-network
+      - database-network
+      - frontend-network
     depends_on:
       mysql:
         condition: service_healthy
@@ -103,7 +104,8 @@ services:
       PGDATABASE: ${POSTGRES_DATABASE}
       JWT_SECRET: ${JWT_SECRET}
     networks:
-      - eventhub-network
+      - database-network
+      - frontend-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,7 +122,8 @@ services:
       AUTH_SERVICE_URL: http://auth:8082
       AI_INSIGHT_URL: http://ai-insight:8084
     networks:
-      - eventhub-network
+      - database-network
+      - frontend-network
     depends_on:
       mongo:
         condition: service_healthy
@@ -141,7 +144,7 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       RABBITMQ_QUEUE: bookings
     networks:
-      - eventhub-network
+      - database-network
     depends_on:
       redis:
         condition: service_healthy
@@ -154,7 +157,8 @@ services:
     environment:
       PORT: 8084
     networks:
-      - eventhub-network
+      - database-network
+      - frontend-network
   analytics:
     build: 
       context: ./services/analytics-service-python
@@ -168,7 +172,8 @@ services:
     ports:
       - "8085:8085"
     networks:
-      - eventhub-network
+      - database-network
+      - frontend-network
     depends_on:
       redis:
         condition: service_healthy
@@ -187,7 +192,7 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - eventhub-network
+      - frontend-network
     depends_on:
       - catalog
       - auth
@@ -205,7 +210,7 @@ services:
     ports:
       - "3000:80"
     networks:
-      - eventhub-network
+      - frontend-network
     depends_on:
       - gateway
 
@@ -217,6 +222,9 @@ volumes:
   rabbitmq_data:
 
 networks:
-  eventhub-network:
+  frontend-network:
+    driver: bridge
+
+  database-network:
     driver: bridge
     
